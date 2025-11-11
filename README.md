@@ -1,5 +1,5 @@
 
-# toio-rl-handson-for-workshop1112
+# toio-rl-handson
 
 ## 準備
 
