@@ -1,0 +1,14 @@
+
+numpy
+pandas
+tqdm
+toio_py==1.1.0
+pettingzoo
+gymnasium
+pygame
+seaborn
+jupyter
+readchar
+bleak==0.22.3
+
+-e .
