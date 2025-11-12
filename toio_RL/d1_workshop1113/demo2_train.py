@@ -63,6 +63,8 @@ def train(
 
     if log_q is not None:
         agent.save_q(log_q)
+    if plot_q:
+        q_plotter.close()
     return eval_rewards, elapse_time, steps
 
 
@@ -98,7 +100,7 @@ if __name__ == "__main__":
     # 学習率
     ALPHA = 0.1
     # 割引率
-    GAMMA = 0.9
+    GAMMA = 0.01
     # 目標地点を変更するステップ数．(a,b)に対して，[a, a+1, ...., b-1]の中から一様にランダム決定．学習時
     target_life_range_for_learn = (35, 36)
     # 目標地点を変更するステップ数．(a,b)に対して，[a, a+1, ...., b-1]の中から一様にランダム決定．評価時

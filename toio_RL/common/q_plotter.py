@@ -134,4 +134,8 @@ class QPlotter:
 
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
-        plt.pause(0.01)
+        # plt.pause(0.01)
+
+    def close(self):
+        plt.close(self.fig)
+        plt.ioff()
