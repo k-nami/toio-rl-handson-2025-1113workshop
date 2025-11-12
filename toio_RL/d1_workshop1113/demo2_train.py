@@ -1,6 +1,9 @@
 from typing import Optional
 from pathlib import Path
 import time
+from datetime import datetime
+import json
+import os
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -80,20 +83,43 @@ if __name__ == "__main__":
     """
 
     # パラメータ
-    EPSILON = 0.1  # 探索率．0から1の実数（推奨0.1）
-    NUM_STEPS = 10**5  # 学習ステップ数．0以上の整数（推奨10**6）
-    GOAL_REWARD = 1.0  # 目標到達時の報酬．実数（推奨1.0）
-    DISPLAY_Q = True  # Qの可視化有無
+    # 探索率．0から1の実数（推奨0.1）
+    EPSILON = 0.1
+    # 学習ステップ数．0以上の整数（推奨10**6）
+    NUM_STEPS = 10**5
+    # 目標到達時の報酬．実数（推奨1.0）
+    GOAL_REWARD = 1.0
+    # Qの可視化有無
+    DISPLAY_Q = True
+    # 書き出すQ値のファイル名（string，必要なときのみ）
     Q_FILE_NAME = f"q_epsilon{str(EPSILON).replace('.', '_')}_step{str(NUM_STEPS)}_reward{str(GOAL_REWARD).replace('.', '_')}"
 
-    env = OfflineEnv(life_range=(35, 36))
-    eval_env = OfflineEnv(life_range=(35, 36))
+    # その他パラメータ（原則，このまま．要望があれば変更OK．Q値のファイルは，上記パラメータで決まるため，上書きされることに注意）
+    # 学習率
+    ALPHA = 0.1
+    # 割引率
+    GAMMA = 0.9
+    # 目標地点を変更するステップ数．(a,b)に対して，[a, a+1, ...., b-1]の中から一様にランダム決定．学習時
+    target_life_range_for_learn = (35, 36)
+    # 目標地点を変更するステップ数．(a,b)に対して，[a, a+1, ...., b-1]の中から一様にランダム決定．評価時
+    target_life_range_for_eval = (35, 36)
+    # csv/プロットする獲得報酬の計測間隔（step）．間隔が短いほど，計算負荷が増加
+    EVAL_INTERVAL = NUM_STEPS / 10
+    # csv/プロットする獲得報酬の評価ステップ数．各intervalごとに，このステップ数だけ行動を選択し，その間に獲得できた報酬の総和を獲得報酬とする
+    EVAL_STEPS = 100
+    # Q値を可視化する間隔（step）．間隔が短いほど，計算負荷が増加
+    PLOT_INTERVAL = NUM_STEPS / 4
+    # Q値を可視化するステップ数．各intervalごとに，表示しているステップの数
+    PLOT_STEPS = 20
+
+    env = OfflineEnv(life_range=target_life_range_for_learn)
+    eval_env = OfflineEnv(life_range=target_life_range_for_eval)
 
     agent = QTableAgent(
         env.observation_space,
         env.action_space,
-        alpha=0.1,  # 学習率
-        gamma=0.9,  # 割引率
+        alpha=ALPHA,
+        gamma=GAMMA,
         epsilon=EPSILON,
     )
 
@@ -101,18 +127,41 @@ if __name__ == "__main__":
         env,
         eval_env=eval_env,
         agent=agent,
-        num_steps=NUM_STEPS,  # 学習ステップ数
-        eval_interval=(NUM_STEPS / 10),  # 評価のステップ間隔
-        eval_steps=100,  #
+        num_steps=NUM_STEPS,
+        eval_interval=EVAL_INTERVAL,
+        eval_steps=EVAL_STEPS,  #
         log_q=Path(".") / Q_FILE_NAME,  # Qテーブルの書き出し先
-        plot_interval=(NUM_STEPS / 4),
-        plot_steps=20,
+        plot_interval=PLOT_INTERVAL,
+        plot_steps=PLOT_STEPS,
         plot_q=DISPLAY_Q,
     )
 
+    # 動作確認向けログ
+    os.makedirs(Path("log"), exist_ok=True)
+    time_str = datetime.now().strftime("%Y_%m%d_%H%M%S")
+    agent.save_q(Path("log") / f"q_{time_str}")
+
     # csvファイルに書き出す
     df = pd.DataFrame({"step": steps, "eval_rewards": eval_rewards})
-    df.to_csv("test_eval.csv")
+    df.to_csv(Path("log") / f"eval_{time_str}.csv")
+
+    params = {
+        "EPSILON": EPSILON,
+        "NUM_STEPS": NUM_STEPS,
+        "GOAL_REWARD": GOAL_REWARD,
+        "DISPLAY_Q": DISPLAY_Q,
+        "Q_FILE_NAME": Q_FILE_NAME,
+        "ALPHA": ALPHA,
+        "GAMMA": GAMMA,
+        "target_life_range_for_learn": target_life_range_for_learn,
+        "target_life_range_for_eval": target_life_range_for_eval,
+        "EVAL_INTERVAL": EVAL_INTERVAL,
+        "EVAL_STEPS": EVAL_STEPS,
+        "PLOT_INTERVAL": PLOT_INTERVAL,
+        "PLOT_STEPS": PLOT_STEPS,
+    }
+    with open(Path("log") / f"param_{time_str}.json", "w", encoding="utf-8") as f:
+        json.dump(params, f, ensure_ascii=False, indent=2)
 
     # 可視化する
     plt.plot(steps, eval_rewards)
