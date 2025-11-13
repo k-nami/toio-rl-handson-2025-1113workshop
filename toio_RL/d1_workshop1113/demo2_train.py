@@ -88,9 +88,9 @@ if __name__ == "__main__":
     # 探索率．0から1の実数（推奨0.1）
     EPSILON = 0.1
     # 学習ステップ数．0以上の整数（推奨10**6）
-    NUM_STEPS = 10**5
+    NUM_STEPS = 10**6
     # 目標到達時の報酬．実数（推奨1.0）
-    GOAL_REWARD = 1.0
+    GOAL_REWARD = 1000
     # Qの可視化有無
     DISPLAY_Q = True
     # 書き出すQ値のファイル名（string，必要なときのみ）
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     # 学習率
     ALPHA = 0.1
     # 割引率
-    GAMMA = 0.01
+    GAMMA = 0.9
     # 目標地点を変更するステップ数．(a,b)に対して，[a, a+1, ...., b-1]の中から一様にランダム決定．学習時
     target_life_range_for_learn = (35, 36)
     # 目標地点を変更するステップ数．(a,b)に対して，[a, a+1, ...., b-1]の中から一様にランダム決定．評価時
@@ -114,8 +114,10 @@ if __name__ == "__main__":
     # Q値を可視化するステップ数．各intervalごとに，表示しているステップの数
     PLOT_STEPS = 20
 
-    env = OfflineEnv(life_range=target_life_range_for_learn)
-    eval_env = OfflineEnv(life_range=target_life_range_for_eval)
+    env = OfflineEnv(life_range=target_life_range_for_learn, goal_reward=GOAL_REWARD)
+    eval_env = OfflineEnv(
+        life_range=target_life_range_for_eval, goal_reward=GOAL_REWARD
+    )
 
     agent = QTableAgent(
         env.observation_space,
