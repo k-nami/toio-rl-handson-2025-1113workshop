@@ -5,17 +5,15 @@ from q_learning import QTableAgent
 from toio_RL.common.q_plotter import QPlotter
 
 
-async def test_agent(
-    env,
-    agent,
-    q_plot_interval,
-):
-    q_plotter = QPlotter(env)
+async def test_agent(env, agent, q_plot_interval, q_plot=True):
+    if q_plot:
+        q_plotter = QPlotter(env)
 
     try:
         state, _ = await env.reset()
         env.render()
-        q_plotter.plot_q(Q=agent.Q)
+        if q_plot:
+            q_plotter.plot_q(Q=agent.Q)
 
         for step in range(10000):
             print(f"\n--- ステップ {step + 1} ---")
@@ -24,7 +22,8 @@ async def test_agent(
             env.render()
             # if step % q_plot_interval == 0:
             #   q_plotter.plot_q(Q=agent.Q)
-            q_plotter.plot_q(Q=agent.Q)
+            if q_plot:
+                q_plotter.plot_q(Q=agent.Q)
             print(f"状態:{state}, 報酬:{reward}")
             await asyncio.sleep(1.0)  # 可視化が遅れるので必須
     except KeyboardInterrupt:
@@ -53,12 +52,13 @@ if __name__ == "__main__":
     """
 
     Q_FILE_NAME = "q_epsilon0_1_step1000000_reward1_0.npy"
+    Q_PLOT = False
 
-    env = OnlineEnv(agent_name="toio-n2r", target_name="toio-22N")
+    env = OnlineEnv(agent_name="toio-38B", target_name="toio-589")
     agent = QTableAgent(
         env.observation_space,
         env.action_space,
     )
     agent.load_q(Q_FILE_NAME)
 
-    asyncio.run(test_agent(env, agent, q_plot_interval=1))
+    asyncio.run(test_agent(env, agent, q_plot_interval=1, q_plot=Q_PLOT))
